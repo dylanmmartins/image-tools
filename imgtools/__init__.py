@@ -7,9 +7,9 @@ from .stack import (
     load_tif_stack,
     register_stack_to_template
 )
-# from .animate import (
-#     fmt_figure,
-#     make_frames,
-#     write_animation
-# )
+from .animate import (
+    fmt_figure,
+    make_frames,
+    write_animation
+)
 from .vid import avi_to_arr
