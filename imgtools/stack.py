@@ -1,0 +1,164 @@
+"""
+imgtools/stack.py
+Image stack operations.
+
+Author        : Dylan Martins
+Written       : Nov 09 2023
+Last modified : Jan 26 2024
+"""
+
+
+import numpy as np
+from tqdm import tqdm
+import tifffile as tiff
+import skimage.registration
+import scipy.ndimage
+
+import imgtools
+
+
+def norm_arr(A, min_=None, max_=None):
+    """ Normalize an array between two values.
+
+    Parameters
+    ----------
+    A : np.ndarray
+        Array to normalize.
+    min_ : int or float (optional)
+        Minimum value to scale array values to. If no value
+        is provided, use the array's minimum.
+    max_ : int or float (optional)
+        Sam as min_ for the maximum value.
+    
+    Returns
+    -------
+    _a : np.ndarray
+        Array with the asme shape as input argument `A`, with
+        contained values normalized between the chosen bounds.
+    """
+
+    if min_ is None:
+        min_ = np.nanmin(A)
+    if max_ is None:
+        max_ = np.nanmax(A)
+
+    _a = A + np.abs(min_)
+    _a = _a / max_
+
+    return _a
+
+
+def register_stack_to_template(stack, template=None):
+    """ Register a stack of images to a template image.
+
+    Parameters
+    ----------
+    stack : np.ndarray
+        Image stack as a 3D numpy array.
+
+    Returns
+    -------
+    stack : np.ndarray
+        Image stack with shifted images.
+    extras : dict
+        Dictionary of extra variables. Variables are
+        'x_shift', 'y_shift', and 'shifterr', (the shift
+        values and the error for each frame, respectively).
+    """
+
+    print('Registering image stack to template.')
+
+    if template is None:
+        template = stack[0,:,:].copy()
+
+    # Initialize arrays to store shift values
+    x_shift = np.zeros(np.size(stack, axis=0))
+    y_shift = np.zeros(np.size(stack, axis=0))
+    shifterr = np.zeros(np.size(stack, axis=0))
+
+
+    # print('Starting stack registration')
+    for i in tqdm(range(np.size(stack, axis=0))):
+        # shift image to match template
+        shift, error, _ = skimage.registration.phase_cross_correlation(
+            reference_image=template,
+            moving_image=stack[i,:,:],
+            upsample_factor=4
+        )
+
+        x_shift[i] = shift[0]
+        y_shift[i] = shift[1]
+        shifterr[i] = error
+
+        # Apply shift to image
+        stack[i,:,:] = scipy.ndimage.shift(
+            stack[i,:,:],
+            shift,
+            mode='constant',
+            cval=np.nan
+        )
+
+    # Make a dictionary of extras to return
+    extras = {
+        'x_shift': x_shift,
+        'y_shift': y_shift,
+        'shifterr': shifterr
+    }
+
+    # Return stack with shifted images
+    return stack, extras
+
+
+
+
+def load_tif_stack(path, rotate=False, ds=1.0, doReg=True, doNorm=True):
+    """ Load a tif stack into a numpy array.
+
+    Before running this function, make sure that the tif stack is a single
+    multi-page tif file. This conversion can be done with the function
+    `imgtools.tif_convert()` or the matlab function `subroutine_tifConvert.m`
+    from the Goard lab 2P post-processing repository.
+
+    Parameters
+    ----------
+    path : str
+        Path to tif stack, which needs to be a single multi-page
+        tif file.
+    rotate : bool
+        Rotate the image by 180 deg. Default value is False.
+    ds : float
+        Downsample the image by this factor. If this value is set
+        to 1, the image will remaind and full-size. If it is set to
+        0.25, images are resized to one-quarter of the original size.
+    doReg : bool
+        Register the image stack to a template. Default is True.
+    doNorm : bool
+        Normalize the image using its minimum and maximum values as
+        the upper and lower bounds.
+
+    Returns
+    -------
+    tif_array : np.ndarray
+        Image stack as a numpy array.
+    """
+
+    tif_array = tiff.imread(path)
+
+    # Rotate by 180 deg
+    if rotate is True:
+        for i in range(np.size(tif_array, axis=0)):
+            tif_array[i,:,:] = np.flipud(np.fliplr(tif_array[i,:,:]))
+
+    # Downsample, to 1/4 original resolution along axis 1 and 2
+    if ds != 1:
+        tif_array = tif_array[:, ::int(1/ds), ::int(1/ds)]
+
+    # Image stack registration
+    if doReg is True:
+        tif_array, _ = register_stack_to_template(tif_array)
+
+    if doNorm is True:
+        tif_array = norm_arr(tif_array)
+
+    return tif_array
+
