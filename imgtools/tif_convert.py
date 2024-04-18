@@ -11,6 +11,7 @@ Written       : April 12 2024
 import os
 import argparse
 import numpy as np
+from glob import glob
 from tqdm import tqdm
 from PIL import Image
 import PySimpleGUI as sg
@@ -21,7 +22,8 @@ sg.theme('Default1')
 
 
 def tif_convert(firstfile=None, savepath=None,
-                delete_singles=False, ret=False, saveas='tif'):
+                delete_singles=False, ret=False, saveas='tif',
+                multicycle=False):
 
     if firstfile is None:
         firstfile = sg.popup_get_file(
@@ -48,24 +50,30 @@ def tif_convert(firstfile=None, savepath=None,
 
     file_list = []
 
-    nF = 0
-    while True:
-        nF += 1
-        test_name = '{}_{:06d}.{}'.format(
-            base_filename,
-            nF,
-            add_ext
-        )
-        testpath = os.path.join(head, test_name)
+    if multicycle is True:
+        file_list = glob(os.path.join(head, '*.ome.tif'))
+        file_list = [f for f in file_list if 'Reference' not in f]
+        file_list = sorted(file_list)
 
-        if os.path.isfile(testpath):
-            file_list.append(testpath)
+    elif multicycle is False:
 
-        elif not os.path.isfile(testpath):
-            break
+        nF = 0
+        while True:
+            nF += 1
+            test_name = '{}_{:06d}.{}'.format(
+                base_filename,
+                nF,
+                add_ext
+            )
+            testpath = os.path.join(head, test_name)
+
+            if os.path.isfile(testpath):
+                file_list.append(testpath)
+
+            elif not os.path.isfile(testpath):
+                break
 
     num_files = len(file_list)
-
 
     im = np.array(Image.open(firstfile))
     xPixels = np.size(im, 0)
