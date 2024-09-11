@@ -117,8 +117,8 @@ def tif_convert(firstfile=None, savepath=None,
 
     print('New file written to {}'.format(savefilename))
 
-    print('Deleting single-page tif files.')
     if delete_singles is True:
+        print('Deleting single-page tif files.')
         for f in file_list:
             os.remove(f)
 
@@ -137,6 +137,9 @@ def from_args():
     parser.add_argument('-as', '--saveas', default='tif')
     parser.add_argument('-del', '--delete', default=True)
     args = parser.parse_args()
+
+    # ret flag will always be false when called from terminal, which
+    # is the only access point to this func
 
     tif_convert(args.filepath, args.savepath,
                 delete_singles=args.delete,

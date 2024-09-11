@@ -7,7 +7,8 @@ Written       : Nov 09 2023
 Last modified : Jan 26 2024
 """
 
-
+import os
+import cv2
 import numpy as np
 from tqdm import tqdm
 import tifffile as tiff
@@ -162,3 +163,55 @@ def load_tif_stack(path, rotate=False, ds=1.0, doReg=True, doNorm=True):
 
     return tif_array
 
+
+
+
+def multipart_tif_to_avi(searchpath):
+    """ Read a multi-part TIF and write as an avi file.
+    
+    """
+
+    filelist = [os.path.join(searchpath, f) for f in os.listdir(searchpath)]
+
+    # get dims of first item
+    f = filelist[0]
+    imgs = imgtools.load_tif_stack(f, doReg=False, doNorm=False)
+    total_frames = 0
+    for f in filelist:
+        total_frames += np.size(imgtools.load_tif_stack(f, doReg=False, doNorm=False), 0)
+
+    print('Found {} frames.'.format(total_frames))
+
+    imgstack = np.empty([total_frames, 512, 640, 3])
+
+    filled_to = 0
+    print('Reading tif blocks...')
+    for f in tqdm(filelist):
+        im = imgtools.load_tif_stack(f, doReg=False, doNorm=False)
+        will_add = np.size(im,0)
+        imgstack[filled_to:filled_to+will_add,:,:,:] = im.copy()
+        filled_to += will_add
+
+    video_savepath = os.path.join(searchpath, 'full_video.avi')
+
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+
+    video = cv2.VideoWriter(
+        video_savepath,
+        fourcc, 60.,
+        (
+            np.size(imgstack, 2),
+            np.size(imgstack, 1)
+        )
+    )
+
+    print('Writing avi file...')
+    for i in tqdm(range(np.size(imgstack, 0))):
+
+        im = imgstack[i,:,:,:]
+        im = im.astype(np.uint8)
+        im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
+        video.write(im)
+
+    cv2.destroyAllWindows()
+    video.release()
