@@ -215,3 +215,5 @@ def multipart_tif_to_avi(searchpath):
 
     cv2.destroyAllWindows()
     video.release()
+
+    return video_savepath
