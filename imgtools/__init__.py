@@ -14,3 +14,9 @@ from .animate import (
     write_animation
 )
 from .vid import avi_to_arr
+
+from .gui_funcs import (
+    select_file,
+    select_directory,
+    get_string_input
+)

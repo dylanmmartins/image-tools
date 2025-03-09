@@ -14,11 +14,10 @@ import numpy as np
 from glob import glob
 from tqdm import tqdm
 from PIL import Image
-import PySimpleGUI as sg
 import tifffile
 from scipy.io import savemat
 
-sg.theme('Default1')
+import imgtools
 
 
 def tif_convert(firstfile=None, savepath=None,
@@ -26,14 +25,10 @@ def tif_convert(firstfile=None, savepath=None,
                 multicycle=False):
 
     if firstfile is None:
-        firstfile = sg.popup_get_file(
-            'Choose first file',
-            title='Choose first file',
-            multiple_files=False,
-            no_window=True,
-            file_types=(('TIF', '*.tif'),
-                        ('TIF','*.tiff')),
-            keep_on_top=True
+        print('Choose first file.')
+        firstfile = imgtools.select_file(
+            title='Choose first file.',
+            filetypes=[('TIF', '*.tif'),('TIF','*.tiff'),]
         )
 
     firstfile = os.path.normpath(firstfile)
