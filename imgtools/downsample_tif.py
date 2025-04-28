@@ -3,24 +3,17 @@ import os
 import numpy as np
 import tifffile as tiff
 import skimage.measure
-import PySimpleGUI as sg
 from tqdm import tqdm
 
-sg.theme('Default1')
+import imgtools
 
 def downsample_tif(tif_path=None, ds=0.5):
 
-    print('Select file.')
-
     if tif_path is None:
-        tif_path = sg.popup_get_file(
-            'Choose tif file.',
+        print('CHoose tif file.')
+        tif_path = imgtools.select_file(
             title='Choose tif file.',
-            multiple_files=False,
-            no_window=True,
-            file_types=(('TIF', '*.tif'),
-                        ('TIF','*.tiff')),
-            keep_on_top=True
+            filetypes=[('TIF', '*.tif'),('TIF','*.tiff'),]
         )
 
     print(tif_path)
