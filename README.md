@@ -38,7 +38,7 @@ def my_plotting_function(shift):
 Any number of arguments is okay for this function, but each needs to be array-like where the 0th dimension of all arguments have a shared size. That shared 0th dimension size will also be the number of frames in the animated video. In this case, `shift` will be an array of shape `(30,)`.
 Each frame in the demo video will shift a sine function by one these values
 shift_values = np.linspace(-4, 4, 30)
-
+```
 frame_stack = imgt.make_frames(my_plotting_function, [shift_values])
 
 imgt.write_animation(
@@ -46,3 +46,4 @@ imgt.write_animation(
     fps=20,
     savepath='T:/shifted_sine_animation.mp4'
 )
+```
