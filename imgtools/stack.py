@@ -112,7 +112,7 @@ def register_stack_to_template(stack, template=None):
 
 
 
-def load_tif_stack(path, rotate=False, ds=1.0, doReg=True, doNorm=True):
+def load_tif_stack(path, rotate=False, ds=1.0, doReg=False, doNorm=False):
     """ Load a tif stack into a numpy array.
 
     Before running this function, make sure that the tif stack is a single

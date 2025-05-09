@@ -19,4 +19,10 @@ from .gui_funcs import (
     select_directory,
     get_string_input
 )
-from .filter import rolling_average
+from .filter import (
+    rolling_average,
+    medfilt,
+    gaussfilt,
+    high_pass_filter_2d,
+    high_pass_filter_3d
+)
