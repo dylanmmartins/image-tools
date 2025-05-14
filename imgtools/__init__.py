@@ -21,8 +21,16 @@ from .gui_funcs import (
 )
 from .filter import (
     rolling_average,
+    rolling_average_1d,
     medfilt,
     gaussfilt,
-    high_pass_filter_2d,
-    high_pass_filter_3d
+    high_pass_filter_2d_single_frame,
+    high_pass_filter_2d_along_axis,
+    high_pass_filter_3d,
+    nanmedfilt,
+    boxcar_smooth
+)
+from .frame_noise import (
+    resscan_denoise,
+    make_denoise_diagnostic_video
 )
