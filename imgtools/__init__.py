@@ -30,7 +30,7 @@ from .filter import (
     nanmedfilt,
     boxcar_smooth
 )
-from .frame_noise import (
+from .resscan_denoise import (
     resscan_denoise,
     make_denoise_diagnostic_video
 )
