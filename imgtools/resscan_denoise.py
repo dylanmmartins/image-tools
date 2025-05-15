@@ -148,8 +148,8 @@ def resscan_denoise(tif_path=None, ret=False):
         'the denoised stacks to other data streams, subtract diff/2 from the start and end. '
         'Adjust SRA by {} and LRA by {}.'
     )
-    sra_adjust = int((noise_len-np.size(sra_len,0))/2)
-    lra_adjust = int((noise_len-np.size(lra_len,0))/2)
+    sra_adjust = int((noise_len-sra_len)/2)
+    lra_adjust = int((noise_len-lra_len)/2)
     frame_note = frame_note.format(full_numF, sra_len, lra_len, sra_adjust, lra_adjust)
     with open('note_on_denoised_tif_dims.txt', 'w') as file:
         file.write(frame_note)
