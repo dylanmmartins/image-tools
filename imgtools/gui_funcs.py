@@ -11,6 +11,17 @@ def select_file(title, filetypes):
     )
     return file_path
 
+
+def select_files(title, filetypes):
+    root = tk.Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilenames(
+        title=title,
+        filetypes=filetypes
+    )
+    return file_path
+
+
 def select_directory(title):
     root = tk.Tk()
     root.withdraw()
