@@ -19,7 +19,7 @@ def resscan_denoise(tif_path=None, ret=False):
 
     print('Select tif stack.')
     if tif_path is None:
-        tif_path = imgtools.select_files(
+        tif_path = imgtools.select_file(
             'Select tif stack.',
             filetypes=[('TIF', '*.tif'),('TIF','*.tiff'),]
         )
@@ -131,6 +131,7 @@ def resscan_denoise(tif_path=None, ret=False):
     lra_newimg[lra_newimg>np.iinfo(np.uint16).max] = np.iinfo(np.uint16).max
 
     l_savefilename = os.path.join(base_path, '{}_denoised_LRA.tif'.format(tif_name_noext))
+    print('Writing {}'.format(l_savefilename))
     with tifffile.TiffWriter(l_savefilename, bigtiff=True) as savestack:
         savestack.write(
             data=lra_newimg.astype(np.uint16),
