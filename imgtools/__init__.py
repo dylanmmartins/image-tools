@@ -17,7 +17,8 @@ from .vid import avi_to_arr
 from .gui_funcs import (
     select_file,
     select_directory,
-    get_string_input
+    get_string_input,
+    select_files
 )
 from .filter import (
     rolling_average,

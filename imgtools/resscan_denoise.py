@@ -19,7 +19,7 @@ def resscan_denoise(tif_path=None, ret=False):
 
     print('Select tif stack.')
     if tif_path is None:
-        tif_path = imgtools.select_file(
+        tif_path = imgtools.select_files(
             'Select tif stack.',
             filetypes=[('TIF', '*.tif'),('TIF','*.tiff'),]
         )
@@ -33,6 +33,7 @@ def resscan_denoise(tif_path=None, ret=False):
     pdf = PdfPages(os.path.join(base_path, 'denoising_figs.pdf'))
 
     mean_of_banded_block = np.mean(rawimg[:,412:,:],1)
+    # Try at some point: what if i take a band at top and bottom instead?
 
     fig = plt.figure(figsize=(6,6), dpi=300)
     plt.imshow(mean_of_banded_block, aspect=0.05, cmap='gray')
@@ -44,6 +45,7 @@ def resscan_denoise(tif_path=None, ret=False):
     plt.close()
 
     print('Calculating noise pattern.')
+    # Take the section of the frame 
     f_size = np.shape(rawimg[0,:,:])
     noise_pattern = np.zeros_like(rawimg)
     for f in tqdm(range(np.size(noise_pattern,0))):
@@ -192,7 +194,6 @@ def make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_pat
 
 
 if __name__ == '__main__':
-
 
     # tif_path = r'T:\axonal_imaging_LP\250430_DMM_DMM046_LPaxons\file_00004.tif'
     resscan_denoise()
