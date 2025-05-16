@@ -151,7 +151,8 @@ def resscan_denoise(tif_path=None, ret=False):
     sra_adjust = int((noise_len-sra_len)/2)
     lra_adjust = int((noise_len-lra_len)/2)
     frame_note = frame_note.format(full_numF, sra_len, lra_len, sra_adjust, lra_adjust)
-    with open('note_on_denoised_tif_dims.txt', 'w') as file:
+    txt_savepath = os.path.join(base_path, 'note_on_denoised_tif_dims.txt')
+    with open(txt_savepath, 'w') as file:
         file.write(frame_note)
     print(frame_note)
 
