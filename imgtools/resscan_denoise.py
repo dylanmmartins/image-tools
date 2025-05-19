@@ -34,10 +34,13 @@ def resscan_denoise(tif_path=None, ret=False):
 
     mean_of_banded_block = np.mean(rawimg[:,412:,:],1)
     # Try at some point: what if i take a band at top and bottom instead?
+    nPix = 50
+    band_block = np.concatenate([rawimg[:,:nPix,:], rawimg[:,-nPix:]], axis=1)
+    mean_of_banded_block = np.mean(band_block, 1)
 
     fig = plt.figure(figsize=(6,6), dpi=300)
-    plt.imshow(mean_of_banded_block, aspect=0.05, cmap='gray')
-    plt.colorbar()
+    plt.imshow(mean_of_banded_block, aspect='auto', cmap='gray')
+    # plt.colorbar()
     plt.xlabel('y pixels')
     plt.ylabel('time (frames)')
     plt.tight_layout()
@@ -160,6 +163,7 @@ def resscan_denoise(tif_path=None, ret=False):
     if ret:
         return sra_newimg
 
+
 def make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_path, startF, endF):
     # make animation
 
@@ -195,6 +199,5 @@ def make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_pat
 
 if __name__ == '__main__':
 
-    # tif_path = r'T:\axonal_imaging_LP\250430_DMM_DMM046_LPaxons\file_00004.tif'
     resscan_denoise()
 
