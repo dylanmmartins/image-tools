@@ -65,10 +65,14 @@ def resscan_denoise(tif_path=None, ret=False):
     pdf = PdfPages(os.path.join(base_path, 'denoising_figs.pdf'))
 
     mean_of_banded_block = np.mean(rawimg[:,412:,:],1)
+    # Try at some point: what if i take a band at top and bottom instead?
+    nPix = 50
+    band_block = np.concatenate([rawimg[:,:nPix,:], rawimg[:,-nPix:]], axis=1)
+    mean_of_banded_block = np.mean(band_block, 1)
 
     fig = plt.figure(figsize=(6,6), dpi=300)
-    plt.imshow(mean_of_banded_block, aspect=0.05, cmap='gray')
-    plt.colorbar()
+    plt.imshow(mean_of_banded_block, aspect='auto', cmap='gray')
+    # plt.colorbar()
     plt.xlabel('y pixels')
     plt.ylabel('time (frames)')
     plt.tight_layout()
@@ -76,6 +80,7 @@ def resscan_denoise(tif_path=None, ret=False):
     plt.close()
 
     print('Calculating noise pattern.')
+    # Take the section of the frame 
     f_size = np.shape(rawimg[0,:,:])
     noise_pattern = np.zeros_like(rawimg)
     for f in tqdm(range(np.size(noise_pattern,0))):
@@ -161,6 +166,7 @@ def resscan_denoise(tif_path=None, ret=False):
     lra_newimg[lra_newimg>np.iinfo(np.uint16).max] = np.iinfo(np.uint16).max
 
     l_savefilename = os.path.join(base_path, '{}_denoised_LRA.tif'.format(tif_name_noext))
+    print('Writing {}'.format(l_savefilename))
     with tifffile.TiffWriter(l_savefilename, bigtiff=True) as savestack:
         savestack.write(
             data=lra_newimg.astype(np.uint16),
@@ -183,13 +189,13 @@ def resscan_denoise(tif_path=None, ret=False):
     sra_adjust = int((noise_len-sra_len)/2)
     lra_adjust = int((noise_len-lra_len)/2)
     frame_note = frame_note.format(full_numF, sra_len, lra_len, sra_adjust, lra_adjust)
-    with open('note_on_denoised_tif_dims.txt', 'w') as file:
+    txt_savepath = os.path.join(base_path, 'note_on_denoised_tif_dims.txt')
+    with open(txt_savepath, 'w') as file:
         file.write(frame_note)
     print(frame_note)
 
     if ret:
         return sra_newimg
-
 
 
 def make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_path, startF, endF):
