@@ -1,11 +1,10 @@
 """
-imgtools/stack.py
-Image stack operations.
+Genreal image stack operations.
 
-Author        : Dylan Martins
-Written       : Nov 09 2023
-Last modified : Jan 26 2024
+Author: DMM, 2023
+last modified 2024
 """
+
 
 import os
 import cv2
@@ -110,8 +109,6 @@ def register_stack_to_template(stack, template=None):
     return stack, extras
 
 
-
-
 def load_tif_stack(path, rotate=False, ds=1.0, doReg=False, doNorm=False):
     """ Load a tif stack into a numpy array.
 
@@ -164,11 +161,18 @@ def load_tif_stack(path, rotate=False, ds=1.0, doReg=False, doNorm=False):
     return tif_array
 
 
-
-
 def multipart_tif_to_avi(searchpath):
     """ Read a multi-part TIF and write as an avi file.
-    
+
+    Parameters
+    ----------
+    searchpath : str
+        Path in which to search for individual tifs.
+
+    Returns
+    -------
+    video_savepath : str
+        The savepath of the .avi written to disk.
     """
 
     filelist = [os.path.join(searchpath, f) for f in os.listdir(searchpath)]
@@ -217,3 +221,5 @@ def multipart_tif_to_avi(searchpath):
     video.release()
 
     return video_savepath
+
+

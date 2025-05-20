@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Downsample a tiff stack.
+
+Functions
+---------
+downsample_tif(tif_path=None, ds=0.5)
+    Downsample a tiff stack and write it to disk.
+
+Author: DMM, 2024
+"""
+
 
 import os
 import numpy as np
@@ -7,7 +19,26 @@ from tqdm import tqdm
 
 import imgtools
 
-def downsample_tif(tif_path=None, ds=0.5):
+
+def downsample_tif(tif_path=None, ds=0.5, ret=False):
+    """ Downsample a tiff stack and write it to disk.
+
+    Parameters
+    ----------
+    tif_path : str
+        Path to the tiff file to be downsampled.
+    ds : float
+        Downsampling factor. The output image will be ds times smaller
+        in each dimension. Default is 0.5, which means the output image
+        will be half the size of the input image in each dimension.
+    ret : bool
+        If True, return the downsampled array. Default is False.
+    
+    Returns
+    -------
+    newarr : np.ndarray
+        Downsampled array if ret is True. Otherwise, None.
+    """
 
     if tif_path is None:
         print('CHoose tif file.')
@@ -15,8 +46,6 @@ def downsample_tif(tif_path=None, ds=0.5):
             title='Choose tif file.',
             filetypes=[('TIF', '*.tif'),('TIF','*.tiff'),]
         )
-
-    print(tif_path)
 
     arr = tiff.imread(tif_path)
 
@@ -37,7 +66,11 @@ def downsample_tif(tif_path=None, ds=0.5):
     savepath = os.path.splitext(tif_path)[0] + '_downsample.tif'
     tiff.imwrite(savepath, newarr)
 
+    if ret:
+        return newarr
+
 
 if __name__ == '__main__':
 
     downsample_tif()
+

@@ -1,10 +1,18 @@
 """
-imgtools/tif_convert.py
-Convert a directory of .tif files to a multi-page
-.tif file
+Convert a directory of .tif files to a multi-page .tif file
 
-Author        : Dylan Martins
-Written       : April 12 2024
+Functions
+---------
+tif_convert(firstfile=None, savepath=None, delete_singles=False, ret=False, saveas='tif', multicycle=False)
+    Convert a sequence of single tif pages to a 3D tif stack.
+
+Example usage
+-------------
+    $ python -m imgtools.tif_convert --filepath T:/path/to/file.tif
+or using dialog boxes:
+    $ python -m imgtools.tif_convert
+
+Author: DMM, 2024
 """
 
 
@@ -20,9 +28,35 @@ from scipy.io import savemat
 import imgtools
 
 
-def tif_convert(firstfile=None, savepath=None,
-                delete_singles=False, ret=False, saveas='tif',
-                multicycle=False):
+def tif_convert(firstfile=None, savepath=None, delete_singles=False,
+                ret=False, saveas='tif', multicycle=False):
+    """ Convert a sequence of single tif pages to a 3D tif stack.
+
+    Parameters
+    ----------
+    firstfile : str
+        File path to the first tif file. If None, a dialog box opens in which the file is
+        selected. Default is None.
+    savepath : str
+        Path to the directory in which the new tif stack will be written.
+    delete_singles : bool
+        If True, the individual tif files be deleted once they are written into the 3D stack.
+        Default is False.
+    ret : bool
+        If True, the stack will be returned as an array.
+    saveas : str
+        File format to save the stack as. Options are 'tif', 'mat', or 'npy'.
+    multicycle : bool
+        Allow for more strict file path searches for multicycle imaging. Default is False. This
+        option has not been tested much.
+    
+    Returns
+    -------
+    savefilename : str
+        Full file path that the stack was saved to.
+    imgstack : np.ndarray
+        The stack returned as an array. This is only returned if `ret` is True.
+    """
 
     if firstfile is None:
         print('Choose first file.')

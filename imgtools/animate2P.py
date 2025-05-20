@@ -1,10 +1,34 @@
+# -*- coding: utf-8 -*-
+"""
+Write animated video for 2P data.
+
+Functions
+---------
+animate_stack_from_2P(imgpath=None, savename=None)
+    Animate a full tiff stack of two-photon data.
+
+Author: DMM, 2024
+"""
+
+
 import os
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
+
 import imgtools
 
+
 def animate_stack_from_2P(imgpath=None, savename=None):
+    """ Animate a full tiff stack of two-photon data.
+
+    Parameters
+    ----------
+    imgpath : str, optional
+        Path to the tiff stack. If None, a default path is used.
+    savename : str, optional
+        Name of the output video file. If None, a default name is used.
+    """
 
     if imgpath is None:
         imgpath = r'C:\Data\dylan\LPaxons\recordings_for_demo\250426_DMM_DMM046_LPaxons_f05.tif'
@@ -18,19 +42,27 @@ def animate_stack_from_2P(imgpath=None, savename=None):
     img_rollavg = imgtools.rolling_average(imgtools.load_tif_stack(
         imgpath, doReg=True, doNorm=False
     ), window=8)
+
     plot_stack = []
     for f in tqdm(range(np.size(img_rollavg,0))):
+
         fig = plt.figure(dpi=300, figsize=(4,4))
-        plt.imshow(img_rollavg[f,:,:], cmap='gray', vmin=0, vmax=450) # 2000 for benchtop, 300 for mini2p
+        # vmax can be 2000 for benchtop, 300 for mini2p
+        plt.imshow(img_rollavg[f,:,:], cmap='gray', vmin=0, vmax=450)
         plt.axis('off')
         plt.tight_layout()
         plot_stack.append(imgtools.fmt_figure(fig))
+    
     plot_stack = np.array(plot_stack)
+
     imgtools.write_animation(
         plot_stack,
         savepath,
-        60 # 
+        60
     )
 
+
 if __name__ == '__main__':
+
     animate_stack_from_2P()
+

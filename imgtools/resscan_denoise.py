@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Subtract resonance scanner noise in mini2p image stacks.
+
+Functions
+---------
+resscan_denoise(tif_path=None, ret=False)
+    Remove noise added into mini2p image stack by resonance scanner.
+
+Author: DMM, 2025
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -10,12 +23,31 @@ import imgtools
 
 
 def resscan_denoise(tif_path=None, ret=False):
-    # Remove noise added into mini2p image stack by resonance scanner. noise
-    # appears as hazy vertical banding which sweeps slowly along the x axis
-    # (they are not in static positions, and there are ~10 overlapping bands
-    # in the image for any given frame. they move both leftwards and rightwards.
-    # If ret is true, the function will return the image stack with a short (3 frame)
-    # rolling average applied.
+    """ Remove noise added into mini2p image stack by resonance scanner.
+    
+    The noise appears as hazy vertical banding which sweeps slowly along the x axis
+    (they are not in static positions, and there are ~10 overlapping bands in the
+    image for any given frame. they move both leftwards and rightwards. If ret is true,
+    the function will return the image stack with a short (3 frame) rolling average applied.
+
+    This is memory intensive and must be run on a computer with ~128 GB RAM for a video longer
+    of 30k or more frames.
+
+    Parameters
+    ----------
+    tif_path : str
+        Path to the tiff file to be denoised. If None, a file dialog will be opened
+        to select the file.
+    ret : bool
+        If True, return the denoised image stack with a short rolling average applied.
+        Default is False.
+
+    Returns
+    -------
+    sra_newimg : np.ndarray
+        This is only returned if `ret` is True. The image array read in from the `tif_path`,
+        denoised and with a rolling average applied to the array across the temporal axis.
+    """
 
     print('Select tif stack.')
     if tif_path is None:
@@ -158,8 +190,26 @@ def resscan_denoise(tif_path=None, ret=False):
     if ret:
         return sra_newimg
 
+
+
 def make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_path, startF, endF):
-    # make animation
+    """ Make a diagnostic video of the array.
+
+    Parameters
+    ----------
+    ra_img : np.ndarray
+        Image stack (not denoised) image with short rolling average applied.
+    noise_pattern : np.ndarray
+        Noise pattern with the same dimensions as the ra_img.
+    ra_newimg : np.ndarray
+        Denoised image stack with short rolling average applied.
+    vid_save_path : str
+        Video save path.
+    startF : int
+        Starting frame.
+    endF : int
+        Ending frame.
+    """
 
     # start/end crop value to align noise pattern with smoothed image stacks
     # important to do the smoothing after noise is subtracted instead of before!
@@ -193,7 +243,5 @@ def make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_pat
 
 if __name__ == '__main__':
 
-
-    # tif_path = r'T:\axonal_imaging_LP\250430_DMM_DMM046_LPaxons\file_00004.tif'
     resscan_denoise()
 

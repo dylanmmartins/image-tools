@@ -1,10 +1,19 @@
+# -*- coding: utf-8 -*-
 """
-imgtools/animate.py
 Write animations from a series of matplotlib figures.
 
-Author        : Dylan Martins
-Written       : April 16 2024
+Functions
+---------
+fmt_figure(fig)
+    Format a matplotlib figure for saving as an image.
+make_frames(plot_fn, *args)
+    Make a series of frames from a plotting function.
+write_animation(img_stack, savepath, fps)
+    Write a series of images to an mp4 file.
+
+Author: DMM, April 2024
 """
+
 
 import cv2
 import numpy as np
@@ -15,6 +24,18 @@ import matplotlib.pyplot as plt
 
 
 def fmt_figure(fig):
+    """ Format a matplotlib figure for saving as an image.
+    
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        The figure to format.
+
+    Returns
+    -------
+    img : np.ndarray
+        The formatted image as a numpy array.
+    """
 
     width, height = fig.get_size_inches() * fig.get_dpi()
 
@@ -30,7 +51,16 @@ def fmt_figure(fig):
 
 
 def make_frames(plot_fn, *args):
-    # *args must have matching size in axis=0
+    """ Make a series of frames from a plotting function.
+
+    Parameters
+    ----------
+    plot_fn : function
+        The function to call to create each frame.
+    *args : list
+        The arguments to pass to the plotting function. Each argument must
+        have the same size in axis=0.
+    """
 
     mpl.use('agg')
 
@@ -61,7 +91,19 @@ def make_frames(plot_fn, *args):
 
     return fr_image_stack
 
+
 def write_animation(img_stack, savepath, fps):
+    """ Write a series of images to an mp4 file.
+
+    Parameters
+    ----------
+    img_stack : np.ndarray
+        The image stack to write to the video file.
+    savepath : str
+        The path to save the video file.
+    fps : int
+        The frames per second for the video.
+    """
 
     out = cv2.VideoWriter(
         savepath,
