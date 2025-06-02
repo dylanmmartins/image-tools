@@ -22,7 +22,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import imgtools
 
 
-def resscan_denoise(tif_path=None, ret=False):
+def resscan_denoise(tif_path=None, ret=False, saveRA=False):
     """ Remove noise added into mini2p image stack by resonance scanner.
     
     The noise appears as hazy vertical banding which sweeps slowly along the x axis
@@ -87,7 +87,10 @@ def resscan_denoise(tif_path=None, ret=False):
         frsn = imgtools.boxcar_smooth(mean_of_banded_block[f,:],5)
         noise_pattern[f,:,:] = np.broadcast_to(frsn, f_size).copy()
 
-    newimg = np.subtract(rawimg, noise_pattern)
+    # Subtract the noise pattern from the raw image. Then, add back a
+    # small amount of the signal so info doesn't get cut off for being
+    # below the minimum of uint16 datatype.
+    newimg = np.subtract(rawimg, noise_pattern) + 16
 
     f = 500
     fig, [ax1,ax2,ax3] = plt.subplots(1,3, figsize=(5.5,3), dpi=300)
@@ -130,72 +133,89 @@ def resscan_denoise(tif_path=None, ret=False):
 
     del noise_pattern
 
-    # Save two versions of the output video: one raw video, one with a small
-    # rolling average, and one with a large rolling average.
-    # For the small rolling average, apply a 400 msec smoothing window
-    print('Calculating rolling average (short window).')
-    sra_newimg = imgtools.rolling_average(newimg, 3)
+    if not saveRA:
 
-    full_numF = np.size(newimg,0)
-    sra_len = np.size(sra_newimg,0)
+        newimg[newimg<np.iinfo(np.uint16).min] = np.iinfo(np.uint16).min
+        newimg[newimg>np.iinfo(np.uint16).max] = np.iinfo(np.uint16).max
 
-    # Make sure corrected values are in the bounds of the data type that
-    # will be used when the tif is written.
-    sra_newimg[sra_newimg<np.iinfo(np.uint16).min] = np.iinfo(np.uint16).min
-    sra_newimg[sra_newimg>np.iinfo(np.uint16).max] = np.iinfo(np.uint16).max
+        tif_name_noext = os.path.splitext(tif_name)[0]
+        savefilename = os.path.join(base_path, '{}_denoised.tif'.format(tif_name_noext))
+        print('Writing {}'.format(savefilename))
+        with tifffile.TiffWriter(savefilename, bigtiff=True) as savestack:
+            savestack.write(
+                data=newimg.astype(np.uint16),
+                dtype=np.uint16,
+                shape=newimg.shape,
+                photometric='MINISBLACK'
+            )
 
-    tif_name_noext = os.path.splitext(tif_name)[0]
-    s_savefilename = os.path.join(base_path, '{}_denoised_SRA.tif'.format(tif_name_noext))
-    print('Writing {}'.format(s_savefilename))
-    with tifffile.TiffWriter(s_savefilename, bigtiff=True) as savestack:
-        savestack.write(
-            data=sra_newimg.astype(np.uint16),
-            dtype=np.uint16,
-            shape=sra_newimg.shape,
-            photometric='MINISBLACK'
+    elif saveRA:
+        # Save two versions of the output video: one raw video, one with a small
+        # rolling average, and one with a large rolling average.
+        # For the small rolling average, apply a 400 msec smoothing window
+        print('Calculating rolling average (short window).')
+        sra_newimg = imgtools.rolling_average(newimg, 3)
+
+        full_numF = np.size(newimg,0)
+        sra_len = np.size(sra_newimg,0)
+
+        # Make sure corrected values are in the bounds of the data type that
+        # will be used when the tif is written.
+        sra_newimg[sra_newimg<np.iinfo(np.uint16).min] = np.iinfo(np.uint16).min
+        sra_newimg[sra_newimg>np.iinfo(np.uint16).max] = np.iinfo(np.uint16).max
+
+        tif_name_noext = os.path.splitext(tif_name)[0]
+        s_savefilename = os.path.join(base_path, '{}_denoised_SRA.tif'.format(tif_name_noext))
+        print('Writing {}'.format(s_savefilename))
+        with tifffile.TiffWriter(s_savefilename, bigtiff=True) as savestack:
+            savestack.write(
+                data=sra_newimg.astype(np.uint16),
+                dtype=np.uint16,
+                shape=sra_newimg.shape,
+                photometric='MINISBLACK'
+            )
+        del sra_newimg
+
+        # For the large rolling average, apply a 1600 msec smoothing window (this
+        # is probably only useful for visualization)
+        print('Calculating rolling average (long window).')
+        lra_newimg = imgtools.rolling_average(newimg, 12)
+        lra_len = np.size(lra_newimg,0)
+
+        lra_newimg[lra_newimg<np.iinfo(np.uint16).min] = np.iinfo(np.uint16).min
+        lra_newimg[lra_newimg>np.iinfo(np.uint16).max] = np.iinfo(np.uint16).max
+
+        l_savefilename = os.path.join(base_path, '{}_denoised_LRA.tif'.format(tif_name_noext))
+        print('Writing {}'.format(l_savefilename))
+        with tifffile.TiffWriter(l_savefilename, bigtiff=True) as savestack:
+            savestack.write(
+                data=lra_newimg.astype(np.uint16),
+                dtype=np.uint16,
+                shape=lra_newimg.shape,
+                photometric='MINISBLACK'
+            )
+
+        del newimg
+        del lra_newimg
+
+        pdf.close()
+
+        frame_note = (
+            'The full tif stack had {} frames. The denoised tif stack with a short running average '
+            'has {} frames, and the one with a long running average has {} frames. When aligning '
+            'the denoised stacks to other data streams, subtract diff/2 from the start and end. '
+            'Adjust SRA by {} and LRA by {}.'
         )
-    del sra_newimg
+        sra_adjust = int((noise_len-sra_len)/2)
+        lra_adjust = int((noise_len-lra_len)/2)
+        frame_note = frame_note.format(full_numF, sra_len, lra_len, sra_adjust, lra_adjust)
+        txt_savepath = os.path.join(base_path, 'note_on_denoised_tif_dims.txt')
+        with open(txt_savepath, 'w') as file:
+            file.write(frame_note)
+        print(frame_note)
 
-    # For the large rolling average, apply a 1600 msec smoothing window (this
-    # is probably only useful for visualization)
-    print('Calculating rolling average (long window).')
-    lra_newimg = imgtools.rolling_average(newimg, 12)
-    lra_len = np.size(lra_newimg,0)
-
-    lra_newimg[lra_newimg<np.iinfo(np.uint16).min] = np.iinfo(np.uint16).min
-    lra_newimg[lra_newimg>np.iinfo(np.uint16).max] = np.iinfo(np.uint16).max
-
-    l_savefilename = os.path.join(base_path, '{}_denoised_LRA.tif'.format(tif_name_noext))
-    print('Writing {}'.format(l_savefilename))
-    with tifffile.TiffWriter(l_savefilename, bigtiff=True) as savestack:
-        savestack.write(
-            data=lra_newimg.astype(np.uint16),
-            dtype=np.uint16,
-            shape=lra_newimg.shape,
-            photometric='MINISBLACK'
-        )
-
-    del newimg
-    del lra_newimg
-
-    pdf.close()
-
-    frame_note = (
-        'The full tif stack had {} frames. The denoised tif stack with a short running average '
-        'has {} frames, and the one with a long running average has {} frames. When aligning '
-        'the denoised stacks to other data streams, subtract diff/2 from the start and end. '
-        'Adjust SRA by {} and LRA by {}.'
-    )
-    sra_adjust = int((noise_len-sra_len)/2)
-    lra_adjust = int((noise_len-lra_len)/2)
-    frame_note = frame_note.format(full_numF, sra_len, lra_len, sra_adjust, lra_adjust)
-    txt_savepath = os.path.join(base_path, 'note_on_denoised_tif_dims.txt')
-    with open(txt_savepath, 'w') as file:
-        file.write(frame_note)
-    print(frame_note)
-
-    if ret:
-        return sra_newimg
+        if ret:
+            return sra_newimg
 
 
 def make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_path, startF, endF):
