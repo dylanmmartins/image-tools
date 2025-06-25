@@ -49,7 +49,6 @@ def resscan_denoise(tif_path=None, ret=False, saveRA=False):
         denoised and with a rolling average applied to the array across the temporal axis.
     """
 
-    print('Select tif stack.')
     if tif_path is None:
         tif_path = imgtools.select_file(
             'Select tif stack.',
@@ -89,8 +88,14 @@ def resscan_denoise(tif_path=None, ret=False, saveRA=False):
 
     # Subtract the noise pattern from the raw image. Then, add back a
     # small amount of the signal so info doesn't get cut off for being
-    # below the minimum of uint16 datatype.
-    newimg = np.subtract(rawimg, noise_pattern) + 16
+    # below the minimum of uint16 datatype. Clip the output so any
+    # negative pixel values are discarded
+
+    newimg = np.clip(
+        np.subtract(rawimg, noise_pattern) + 16,
+        0,
+        None
+    ).astype(np.uint16)
 
     f = 500
     fig, [ax1,ax2,ax3] = plt.subplots(1,3, figsize=(5.5,3), dpi=300)
@@ -148,6 +153,8 @@ def resscan_denoise(tif_path=None, ret=False, saveRA=False):
                 shape=newimg.shape,
                 photometric='MINISBLACK'
             )
+
+        pdf.close()
 
     elif saveRA:
         # Save two versions of the output video: one raw video, one with a small
