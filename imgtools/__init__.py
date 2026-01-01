@@ -1,3 +1,4 @@
+__version__ = "0.1" 
 
 from .downsample_tif import downsample_tif
 from .tif_convert import tif_convert
@@ -6,7 +7,9 @@ from .stack import (
     norm_arr,
     load_tif_stack,
     register_stack_to_template,
-    multipart_tif_to_avi
+    multipart_tif_to_avi,
+    read_tif_frame,
+    read_tif_until
 )
 from .animate import (
     fmt_figure,
@@ -34,3 +37,4 @@ from .resscan_denoise import (
     resscan_denoise,
     make_denoise_diagnostic_video
 )
+from .animate2P import animate_stack_from_2P

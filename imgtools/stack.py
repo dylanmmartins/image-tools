@@ -5,7 +5,7 @@ Author: DMM, 2023
 last modified 2024
 """
 
-
+import tifffile
 import os
 import cv2
 import numpy as np
@@ -221,5 +221,54 @@ def multipart_tif_to_avi(searchpath):
     video.release()
 
     return video_savepath
+
+def read_tif_frame(file_path, frame_index):
+    """
+    Read a single frame from a TIFF stack without loading the entire file.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the TIFF file.
+    frame_index : int
+        Zero-based index of the frame to read.
+
+    Returns
+    -------
+    numpy.ndarray
+        The requested frame as an array.
+    """
+    with tifffile.TiffFile(file_path) as tif:
+        num_pages = len(tif.pages)
+        if frame_index < 0 or frame_index >= num_pages:
+            raise IndexError(f"Frame index {frame_index} out of range (0–{num_pages-1})")
+        frame = tif.pages[frame_index].asarray()
+    return frame
+
+
+def read_tif_until(file_path, last_frame=3600):
+    """
+    Read frames sequentially from a TIFF stack up to (and including) last_frame,
+    without loading the entire stack beyond that point.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the TIFF file.
+    last_frame : int, optional (default=3600)
+        Zero-based index of the last frame to read.
+
+    Returns
+    -------
+    numpy.ndarray
+        Stack of frames up to the given frame, shape = (num_frames, height, width).
+    """
+    frames = []
+    with tifffile.TiffFile(file_path) as tif:
+        num_pages = len(tif.pages)
+        stop = min(last_frame + 1, num_pages)
+        for i in range(stop):
+            frames.append(tif.pages[i].asarray())
+    return np.stack(frames, axis=0)
 
 

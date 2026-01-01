@@ -35,7 +35,7 @@ import numpy as np
 from scipy import ndimage
 
 
-def rolling_average(arr, window=8):
+def rolling_average(arr, window=8, ensure_shape_match=False):
     """ Compute the rolling average of a 3D array.
     
     Parameters
@@ -55,6 +55,14 @@ def rolling_average(arr, window=8):
     strides = (arr.strides[0],) + arr.strides
     windows = np.lib.stride_tricks.as_strided(arr, shape=shape, strides=strides)
     rolled_array = windows.mean(axis=1)
+
+    if ensure_shape_match:
+        band = np.zeros([
+            window,
+            np.size(rolled_array,1),
+            np.size(rolled_array,2)
+        ])
+        return np.concatenate([band, rolled_array, band], axis=0)
 
     return rolled_array
 
