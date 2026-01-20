@@ -317,8 +317,8 @@ def resscan_denoise_2D(tif_path=None, ret=False, saveRA=False):
     nPix = 50
     band_block_H = np.concatenate([rawimg[:, :nPix, :], rawimg[:, -nPix:, :]], axis=1)
     mean_of_banded_block_H = np.mean(band_block_H, 1)
-    band_block_V = np.concatenate([rawimg[:, :, :nPix], rawimg[:, :, -nPix:]], axis=1)
-    mean_of_banded_block_V = np.mean(band_block_V, 1)
+    band_block_V = np.concatenate([rawimg[:, :, :nPix], rawimg[:, :, -nPix:]], axis=2)
+    mean_of_banded_block_V = np.mean(band_block_V, 2)
 
     fig = plt.figure(figsize=(6,6), dpi=300)
     plt.imshow(mean_of_banded_block_H, aspect='auto', cmap='gray')
@@ -347,7 +347,7 @@ def resscan_denoise_2D(tif_path=None, ret=False, saveRA=False):
     for f in tqdm(range(np.size(noise_pattern,0))):
         frsnH = imgtools.boxcar_smooth(mean_of_banded_block_H[f,:],5)
         frsnV = imgtools.boxcar_smooth(mean_of_banded_block_V[f,:],5)
-        full_frsn = np.broadcast_to(frsnH, f_size).copy() + np.broadcast_to(frsnV, f_size).copy()
+        full_frsn = np.broadcast_to(frsnH, f_size).copy() + np.broadcast_to(frsnV, f_size).copy().T
         noise_pattern[f,:,:] = full_frsn
 
     # Subtract the noise pattern from the raw image. Then, add back a
@@ -399,6 +399,20 @@ def resscan_denoise_2D(tif_path=None, ret=False, saveRA=False):
     plt.close()
 
     noise_len = np.size(noise_pattern,0)
+
+    noise_pattern[noise_pattern<np.iinfo(np.uint16).min] = np.iinfo(np.uint16).min
+    noise_pattern[noise_pattern>np.iinfo(np.uint16).max] = np.iinfo(np.uint16).max
+
+    tif_name_noext = os.path.splitext(tif_name)[0]
+    savefilename = os.path.join(base_path, '{}_noise_pattern.tif'.format(tif_name_noext))
+    print('Writing {}'.format(savefilename))
+    with tifffile.TiffWriter(savefilename, bigtiff=True) as savestack:
+        savestack.write(
+            data=noise_pattern.astype(np.uint16),
+            dtype=np.uint16,
+            shape=noise_pattern.shape,
+            photometric='MINISBLACK'
+        )
 
     del noise_pattern
 
@@ -499,3 +513,11 @@ if __name__ == '__main__':
         resscan_denoise()
     elif args.dim == 2:
         resscan_denoise_2D()
+
+    # resscan_denoise_2D(r'T:\dylan\resscan_denoise\250915_DMM052_LGNaxons_fm1.tif')
+
+    # ra_img = imgtools.load_tif_stack(r'T:\dylan\resscan_denoise\250915_DMM052_LGNaxons_fm1.tif')
+    # noise_pattern =imgtools.load_tif_stack( r'T:\dylan\resscan_denoise\250915_DMM052_LGNaxons_fm1_noise_pattern.tif')
+    # ra_newimg = imgtools.load_tif_stack(r'T:\dylan\resscan_denoise\250915_DMM052_LGNaxons_fm1_denoised.tif')
+    # vid_save_path = r'T:\dylan\resscan_denoise\demo.avi'
+    # make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_path, 0, 3600)
