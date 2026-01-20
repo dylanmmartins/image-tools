@@ -498,4 +498,4 @@ if __name__ == '__main__':
     if args.dim == 1:
         resscan_denoise()
     elif args.dim == 2:
-        resscan_denoise_2D
+        resscan_denoise_2D()
