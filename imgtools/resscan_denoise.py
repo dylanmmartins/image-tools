@@ -247,6 +247,9 @@ def make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_pat
     # important to do the smoothing after noise is subtracted instead of before!
     startEndFCrop = int((np.size(noise_pattern,0)-np.size(ra_img,0))/2)
 
+    ra_img = imgtools.rolling_average(ra_img, 7)
+    ra_newimg = imgtools.rolling_average(ra_newimg, 7)
+
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out_vid = cv2.VideoWriter(vid_save_path, fourcc, (7.5*8), (1650, 900))
 
