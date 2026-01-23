@@ -501,23 +501,74 @@ def resscan_denoise_2D(tif_path=None, ret=False, saveRA=False):
 
         if ret:
             return sra_newimg
+        
+
+def str_to_bool(value):
+    """ Parse strings to read argparse flag entries in as bool.
+    
+    Parameters
+    ----------
+    value : str
+        Input value.
+
+    Returns
+    -------
+    bool
+        Input value as a boolean.
+    """
+
+    if isinstance(value, bool):
+        return value
+    
+    if value.lower() in {'False', 'false', 'f', '0', 'no', 'n'}:
+        return False
+    
+    elif value.lower() in {'True', 'true', 't', '1', 'yes', 'y'}:
+        return True
+    
+    raise ValueError(f'{value} is not a valid boolean value')
 
 
 if __name__ == '__main__':
         
     parser = argparse.ArgumentParser()
     parser.add_argument('-dim', '--dim', type=int, default=1)
+    parser.add_argument('-makevid', '--makevid', type=str_to_bool, default=False)
     args = parser.parse_args()
 
-    if args.dim == 1:
-        resscan_denoise()
-    elif args.dim == 2:
-        resscan_denoise_2D()
+    if not args.makevid:
+        if args.dim == 1:
+            resscan_denoise()
+        elif args.dim == 2:
+            resscan_denoise_2D()
 
-    # resscan_denoise_2D(r'T:\dylan\resscan_denoise\250915_DMM052_LGNaxons_fm1.tif')
+    elif args.makevid:
 
-    # ra_img = imgtools.load_tif_stack(r'T:\dylan\resscan_denoise\250915_DMM052_LGNaxons_fm1.tif')
-    # noise_pattern =imgtools.load_tif_stack( r'T:\dylan\resscan_denoise\250915_DMM052_LGNaxons_fm1_noise_pattern.tif')
-    # ra_newimg = imgtools.load_tif_stack(r'T:\dylan\resscan_denoise\250915_DMM052_LGNaxons_fm1_denoised.tif')
-    # vid_save_path = r'T:\dylan\resscan_denoise\demo.avi'
-    # make_denoise_diagnostic_video(ra_img, noise_pattern, ra_newimg, vid_save_path, 0, 3600)
+        ra_img = imgtools.select_file(
+            'Select the raw tif stack (not yet denoised).',
+            filetypes=[('TIF','.tif'), ('TIFF','.tiff'),]
+        )
+
+        noise_pattern = imgtools.select_file(
+            'Select the computed noise pattern tif stack.',
+            filetypes=[('TIF','.tif'), ('TIFF','.tiff'),]
+        )
+
+        ra_newimg = imgtools.select_file(
+            'Select the denoised image stack.',
+            filetypes=[('TIF','.tif'), ('TIFF','.tiff'),]
+        )
+
+        vid_save_dir = imgtools.select_directory(
+            'Select a save directory.'
+        )
+        vid_save_path = os.path.join(vid_save_dir, 'denoised_demo.avi')
+
+        make_denoise_diagnostic_video(
+            imgtools.load_tif_stack(ra_img),
+            imgtools.load_tif_stack(noise_pattern),
+            imgtools.load_tif_stack(ra_newimg),
+            vid_save_path,
+            0,
+            3600
+        )
