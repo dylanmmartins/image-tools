@@ -263,12 +263,9 @@ def read_tif_until(file_path, last_frame=3600):
     numpy.ndarray
         Stack of frames up to the given frame, shape = (num_frames, height, width).
     """
-    frames = []
     with tifffile.TiffFile(file_path) as tif:
         num_pages = len(tif.pages)
         stop = min(last_frame + 1, num_pages)
-        for i in range(stop):
-            frames.append(tif.pages[i].asarray())
-    return np.stack(frames, axis=0)
+        return tif.asarray(key=slice(0, stop))
 
 
